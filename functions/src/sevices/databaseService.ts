@@ -15,7 +15,8 @@ export async function getSession(userId: string): Promise<Session | null> {
   return docSnap.data() as Session;
 }
 
-export async function getSessionData(userId: string): Promise<object | null> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function getSessionData(userId: string): Promise<any | null> {
   const session = await getSession(userId);
 
   return session?.data ?? null;

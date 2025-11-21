@@ -1,6 +1,7 @@
 export interface Session {
     step: string,
-    data: object,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any,
     userId: string,
     updatedAt: FirebaseFirestore.Timestamp
 }

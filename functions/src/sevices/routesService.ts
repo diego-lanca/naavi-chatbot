@@ -7,66 +7,63 @@ export async function computeBestRoute(addresses: Address[]) {
   const valid = addresses.filter((a) => a.lat && a.lon);
 
   if (valid.length < 2) {
-    throw new Error(
-      "É necessário pelo menos dois endereços com latitude e longitude."
-    );
+    throw new Error("Envie pelo menos um destino além da localização atual.");
   }
 
-  const url = `https://routes.googleapis.com/directions/v2:computeRoutes`;
+  // Origem é sempre o primeiro item
+  const origin = valid[0];
+
+  const intermediates = valid.slice(1).map((a) => ({
+    location: {
+      latLng: { latitude: a.lat, longitude: a.lon },
+    },
+  }));
+
+  const destination = {
+    location: {
+      latLng: { latitude: origin.lat, longitude: origin.lon },
+    },
+  };
 
   const body = {
     origin: {
-      location: { latLng: { latitude: valid[0].lat, longitude: valid[0].lon } },
+      location: { latLng: { latitude: origin.lat, longitude: origin.lon } },
     },
-    destination: {
-      location: {
-        latLng: {
-          latitude: valid[valid.length - 1].lat,
-          longitude: valid[valid.length - 1].lon,
-        },
-      },
-    },
-    intermediates: valid.slice(1, -1).map((a) => ({
-      location: { latLng: { latitude: a.lat, longitude: a.lon } },
-    })),
+    destination,
+    intermediates,
     travelMode: "DRIVE",
-    optimizeWaypointOrder: true,
     routingPreference: "TRAFFIC_AWARE",
+    optimizeWaypointOrder: true,
   };
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-Goog-Api-Key": API_KEY,
-      "X-Goog-FieldMask":
-        "routes.optimizedIntermediateWaypointIndex.routes" +
-        ".routeLabels.routes.distanceMeters.routes.duration.routes.polyline",
-    },
-    body: JSON.stringify(body),
-  });
+  const res = await fetch(
+    "https://routes.googleapis.com/directions/v2:computeRoutes",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": API_KEY,
+        "X-Goog-FieldMask":
+          "routes.optimizedIntermediateWaypointIndex," + "routes.polyline",
+      },
+      body: JSON.stringify(body),
+    }
+  );
 
   const data = await res.json();
 
-  // 👇 extrai a melhor ordem dos pontos intermediários
-  const optimizedOrder =
+  const optimizedIdx =
     data.routes?.[0]?.optimizedIntermediateWaypointIndex || [];
 
-  // monta a lista na nova ordem
-  const ordered = [
-    valid[0],
-    // intermediários reordenados
-    ...optimizedOrder.map((i: number) => valid[i + 1]),
-    valid[valid.length - 1],
-  ];
+  const ordered = [origin, ...optimizedIdx.map((i: number) => valid[i + 1])];
 
-  // 👇 gera link do Google Maps
+  // Gera rota no Maps (sem volta para origem)
   const mapsLink =
     "https://www.google.com/maps/dir/" +
     ordered.map((a) => `${a.lat},${a.lon}`).join("/");
 
   return {
-    optimizedOrder,
+    ordered,
     mapsLink,
   };
 }
