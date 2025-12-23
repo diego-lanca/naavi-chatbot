@@ -4,9 +4,11 @@ import { UserDoc } from "../models/user";
 import { getSessionData, setSession } from "../sevices/databaseService";
 import {
   generateMapsLinks,
+  optimizeChunkWithGoogle,
 } from "../sevices/routesService";
 import {
   buildOptimizedRoute,
+  chunkRoute,
   getAddressFromCoords,
   hasCoords,
   validateAddresses,
@@ -69,6 +71,7 @@ export async function handleUserSendLocation(
     step: "user_confirm_location",
     data: {
       userLocation: {
+        found: true,
         lat: Number(latitude),
         lon: Number(longitude),
         formatted: address,
@@ -130,12 +133,6 @@ export async function handleManualRouteInsert(
   if (addresses.length === 0) {
     return {
       msg: "Não consegui reconhecer nenhum endereço, tente novamente!",
-    };
-  }
-
-  if (addresses.length > 9) {
-    return {
-      msg: "Por favor, insira somente até 9 endereços!",
     };
   }
 
@@ -208,7 +205,7 @@ export async function handleRouteReview(
   }
 
   const sessionData = await getSessionData(user.id);
-  const validated = sessionData?.validatedAddresses;
+  const validated = sessionData?.validatedAddresses as Address[];
   const userLocation = sessionData?.userLocation;
 
   if (!validated || !userLocation) {
@@ -258,9 +255,21 @@ export async function handleRouteReview(
       lon: userLocation.lon,
     };
 
-    const orderedRoute = buildOptimizedRoute(origin, validOnly);
+    const orderedGlobal = buildOptimizedRoute(origin, validated);
 
-    const links = generateMapsLinks(orderedRoute);
+    const apiChunks = chunkRoute(orderedGlobal, 25);
+
+    let currentOrigin = origin;
+    const refined: Address[] = [];
+
+    for (const chunk of apiChunks) {
+      const optimized = await optimizeChunkWithGoogle(currentOrigin, chunk);
+      refined.push(...optimized);
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      currentOrigin = optimized.at(-1)!;
+    }
+
+    const links = generateMapsLinks(refined);
 
     let response =
       "🚀 *Rota otimizada gerada!*\n" +

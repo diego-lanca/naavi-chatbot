@@ -1,35 +1,50 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { env } from "../config/env";
 import { Address } from "../models/address";
 import { hasCoords } from "../utils/functions";
 
 const API_KEY = env.GOOGLEAPI_KEY;
 
-export async function computeBestRoute(addresses: Address[]) {
-  const valid = addresses.filter((a) => a.lat && a.lon);
+export async function computeBestRoute(
+  origin: Address,
+  destinations: Address[]
+): Promise<Address[]> {
+  const valid = destinations.filter(
+    (a) => a.found && typeof a.lat === "number" && typeof a.lon === "number"
+  );
 
-  if (valid.length < 2) {
-    throw new Error("Envie pelo menos um destino além da localização atual.");
-  }
+  if (valid.length === 0) return [origin];
+  if (valid.length === 1) return [origin, valid[0]];
 
-  const origin = valid[0];
+  const destinationFinal = valid[valid.length - 1];
+  const intermediateAddresses = valid.slice(0, -1); // 👈 TODOS menos o último
 
-  const intermediates = valid.slice(1).map((a) => ({
+  const intermediates = intermediateAddresses.map((a) => ({
     location: {
-      latLng: { latitude: a.lat, longitude: a.lon },
+      latLng: {
+        latitude: a.lat!,
+        longitude: a.lon!,
+      },
     },
   }));
 
-  const destination = {
-    location: {
-      latLng: { latitude: origin.lat, longitude: origin.lon },
-    },
-  };
-
   const body = {
     origin: {
-      location: { latLng: { latitude: origin.lat, longitude: origin.lon } },
+      location: {
+        latLng: {
+          latitude: origin.lat!,
+          longitude: origin.lon!,
+        },
+      },
     },
-    destination,
+    destination: {
+      location: {
+        latLng: {
+          latitude: destinationFinal.lat!,
+          longitude: destinationFinal.lon!,
+        },
+      },
+    },
     intermediates,
     travelMode: "DRIVE",
     routingPreference: "TRAFFIC_AWARE",
@@ -43,8 +58,7 @@ export async function computeBestRoute(addresses: Address[]) {
       headers: {
         "Content-Type": "application/json",
         "X-Goog-Api-Key": API_KEY,
-        "X-Goog-FieldMask":
-          "routes.optimizedIntermediateWaypointIndex," + "routes.polyline",
+        "X-Goog-FieldMask": "routes.optimizedIntermediateWaypointIndex",
       },
       body: JSON.stringify(body),
     }
@@ -52,24 +66,28 @@ export async function computeBestRoute(addresses: Address[]) {
 
   const data = await res.json();
 
-  const optimizedIdx =
-    data.routes?.[0]?.optimizedIntermediateWaypointIndex || [];
+  const optimizedIdx: number[] =
+    data.routes?.[0]?.optimizedIntermediateWaypointIndex ?? [];
 
-  const ordered = [origin, ...optimizedIdx.map((i: number) => valid[i + 1])];
+  const ordered = [
+    origin,
+    ...optimizedIdx.map((i) => intermediateAddresses[i]),
+    destinationFinal,
+  ];
 
-  const mapsLink =
-    "https://www.google.com/maps/dir/" +
-    ordered.map((a) => `${a.lat},${a.lon}`).join("/");
-
-  return {
-    ordered,
-    mapsLink,
-  };
+  return ordered;
 }
 
-export function generateMapsLinks(
-  route: Address[]
-): string[] {
+export async function optimizeChunkWithGoogle(
+  origin: Address,
+  chunk: Address[]
+): Promise<Address[]> {
+  if (chunk.length <= 1) return chunk;
+
+  return await computeBestRoute(origin, chunk);
+}
+
+export function generateMapsLinks(route: Address[]): string[] {
   const clean = route.filter(hasCoords);
 
   const links: string[] = [];

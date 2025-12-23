@@ -120,7 +120,7 @@ export function buildOptimizedRoute(
   destinations: Address[]
 ): Address[] {
   const remaining = [...destinations];
-  const route: Address[] = [origin];
+  const route: Address[] = [];
 
   let current = origin;
 
@@ -150,4 +150,12 @@ export function hasCoords(
   return (
     a.found === true && typeof a.lat === "number" && typeof a.lon === "number"
   );
+}
+
+export function chunkRoute<T>(points: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < points.length; i += size) {
+    chunks.push(points.slice(i, i + size));
+  }
+  return chunks;
 }
