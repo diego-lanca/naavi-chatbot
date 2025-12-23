@@ -4,7 +4,7 @@ export function mainMenu(): string {
     "────────────────────────\n" +
     "Escolha uma das opções abaixo 👇\n\n" +
     "1️⃣ 🚚 Nova Entrega / Criar Rota\n" +
-    "2️⃣ 📊 Estatísticas de Rotas\n" +
-    "3️⃣ 👤 Perfil\n\n"
+    "2️⃣ 📊 Estatísticas de Rotas\n\n"
+    // "3️⃣ 👤 Perfil\n\n"
   );
 }

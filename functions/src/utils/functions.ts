@@ -53,7 +53,7 @@ export async function getAddressFromCoords(
 
   const res = await fetch(url);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const data = await res.json() as any;
+  const data = (await res.json()) as any;
 
   if (data.status !== "OK") return null;
 
@@ -92,4 +92,62 @@ export async function geocodeAddress(
     console.error("Erro Google Geocoding:", err);
     return null;
   }
+}
+
+export function haversineDistance(a: Address, b: Address): number {
+  if (!hasCoords(a) || !hasCoords(b)) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  const R = 6371;
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+
+  const dLat = toRad(b.lat - a.lat);
+  const dLon = toRad(b.lon - a.lon);
+
+  const lat1 = toRad(a.lat);
+  const lat2 = toRad(b.lat);
+
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+
+  return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+}
+
+export function buildOptimizedRoute(
+  origin: Address,
+  destinations: Address[]
+): Address[] {
+  const remaining = [...destinations];
+  const route: Address[] = [origin];
+
+  let current = origin;
+
+  while (remaining.length > 0) {
+    let nearestIndex = 0;
+    let nearestDistance = Infinity;
+
+    for (let i = 0; i < remaining.length; i++) {
+      const d = haversineDistance(current, remaining[i]);
+      if (d < nearestDistance) {
+        nearestDistance = d;
+        nearestIndex = i;
+      }
+    }
+
+    const next = remaining.splice(nearestIndex, 1)[0];
+    route.push(next);
+    current = next;
+  }
+
+  return route;
+}
+
+export function hasCoords(
+  a: Address
+): a is Address & { lat: number; lon: number } {
+  return (
+    a.found === true && typeof a.lat === "number" && typeof a.lon === "number"
+  );
 }

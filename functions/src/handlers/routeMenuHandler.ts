@@ -1,8 +1,16 @@
 import { routeMenu } from "../bot/flows/routeMenu";
+import { Address } from "../models/address";
 import { UserDoc } from "../models/user";
 import { getSessionData, setSession } from "../sevices/databaseService";
-import { computeBestRoute } from "../sevices/routesService";
-import { getAddressFromCoords, validateAddresses } from "../utils/functions";
+import {
+  generateMapsLinks,
+} from "../sevices/routesService";
+import {
+  buildOptimizedRoute,
+  getAddressFromCoords,
+  hasCoords,
+  validateAddresses,
+} from "../utils/functions";
 
 export function handleRouteMenuOptions(): Record<
   string,
@@ -19,7 +27,7 @@ export function handleRouteMenuOptions(): Record<
     user_send_location: handleUserSendLocation,
     user_confirm_location: handleUserConfirmLocation,
     manual_route_insert: handleManualRouteInsert,
-    automatic_route_insert: handleAutomaticRouteInsert,
+    // automatic_route_insert: handleAutomaticRouteInsert,
     route_review: handleRouteReview,
   };
 }
@@ -125,6 +133,12 @@ export async function handleManualRouteInsert(
     };
   }
 
+  if (addresses.length > 9) {
+    return {
+      msg: "Por favor, insira somente até 9 endereços!",
+    };
+  }
+
   const validatedAddresses = await validateAddresses(addresses);
 
   await setSession(user.id, {
@@ -154,38 +168,44 @@ export async function handleManualRouteInsert(
   return { msg: response };
 }
 
-export async function handleAutomaticRouteInsert(
-  user: UserDoc,
-  msg: string
-): Promise<{ msg: string; mediaUrl?: string }> {
-  if (msg.trim() == "0") {
-    await setSession(user.id, { step: "route_menu" });
-    return { msg: routeMenu() };
-  }
+// export async function handleAutomaticRouteInsert(
+//   user: UserDoc,
+//   msg: string
+// ): Promise<{ msg: string; mediaUrl?: string }> {
+//   if (msg.trim() == "0") {
+//     await setSession(user.id, { step: "route_menu" });
+//     return { msg: routeMenu() };
+//   }
 
-  const userName = msg.trim();
+//   const userName = msg.trim();
 
-  if (userName.length < 2 || userName.length > 50 || /^\d+$/.test(userName)) {
-    return {
-      msg:
-        "Hmm, esse nome não parece válido. 🤔\n" +
-        "Por favor, digite um nome real para que a " +
-        "gente possa se conhecer melhor.",
-    };
-  }
+//   if (userName.length < 2 || userName.length > 50
+// || /^\d+$/.test(userName)) {
+//     return {
+//       msg:
+//         "Hmm, esse nome não parece válido. 🤔\n" +
+//         "Por favor, digite um nome real para que a " +
+//         "gente possa se conhecer melhor.",
+//     };
+//   }
 
-  await setSession(user.id, { step: "profile_menu" });
+//   await setSession(user.id, { step: "profile_menu" });
 
-  return {
-    msg: "",
-  };
-}
+//   return {
+//     msg: "",
+//   };
+// }
 
 export async function handleRouteReview(
   user: UserDoc,
   msg: string
 ): Promise<{ msg: string; mediaUrl?: string }> {
   msg = msg.trim().toUpperCase();
+
+  if (msg == "0") {
+    await setSession(user.id, { step: "route_menu" });
+    return { msg: routeMenu() };
+  }
 
   const sessionData = await getSessionData(user.id);
   const validated = sessionData?.validatedAddresses;
@@ -220,36 +240,40 @@ export async function handleRouteReview(
     };
   }
 
-  // Geração da rota
   if (msg === "OK") {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const validOnly = validated.filter((a: any) => a.lat && a.lon);
+    const validOnly = validated.filter(hasCoords);
 
-    const fullRoute = [
-      {
-        lat: userLocation.lat,
-        lon: userLocation.lon,
-        formatted: userLocation.formatted,
-        original: userLocation.formatted,
-      },
-      ...validOnly,
-    ];
-
-    if (fullRoute.length < 2) {
+    if (validOnly.length === 0) {
       return {
-        msg: "❌ Para gerar a rota, preciso pelo menos de *1 destino*" +
-        " além da sua localização.",
+        msg: "❌ Para gerar a rota, preciso pelo menos de *1 destino válido*.",
       };
     }
 
-    const { mapsLink } = await computeBestRoute(fullRoute);
-
-    return {
-      msg:
-        "🚀 *Rota otimizada a partir da sua localização!*\n\n" +
-        "Clique no link abaixo para abrir no Google Maps:\n\n" +
-        mapsLink,
+    const origin: Address = {
+      original: userLocation.formatted,
+      formatted: userLocation.formatted,
+      found: true,
+      lat: userLocation.lat,
+      lon: userLocation.lon,
     };
+
+    const orderedRoute = buildOptimizedRoute(origin, validOnly);
+
+    const links = generateMapsLinks(orderedRoute);
+
+    let response =
+      "🚀 *Rota otimizada gerada!*\n" +
+      "📐 Ordenada por proximidade geográfica\n" +
+      "⚠️ Dividida em etapas por limite do Google Maps\n\n";
+
+    links.forEach((link, i) => {
+      response += `🗺️ *Trecho ${i + 1}:*\n${link}\n\n`;
+    });
+
+    response += "Digite *0* para voltar ao menu.";
+
+    return { msg: response };
   }
 
   return { msg: "Opção inválida. Envie um número ou *OK* para continuar." };

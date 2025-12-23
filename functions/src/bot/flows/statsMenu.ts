@@ -8,6 +8,6 @@ export function statsMenu(): string {
     "2️⃣ 🛣️ Distância total percorrida\n" +
     "3️⃣ ⛽ Economia estimada de combustível\n" +
     "4️⃣ 🗓️ Histórico de rotas\n" +
-    "5️⃣ ⬅️ Voltar ao menu principal\n\n"
+    "0️⃣ ⬅️ Voltar ao menu principal\n\n"
   );
 }

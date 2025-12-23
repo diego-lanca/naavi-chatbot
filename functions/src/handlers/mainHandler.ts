@@ -30,7 +30,7 @@ export const onMessage = onRequest(
         Longitude
       );
 
-      // await sendMessage(userPhone, reply.msg, reply.mediaUrl);
+      await sendMessage(userPhone, reply.msg, reply.mediaUrl);
 
       res.status(200).send(reply);
     } catch (err) {

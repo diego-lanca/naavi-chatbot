@@ -1,5 +1,6 @@
 import { env } from "../config/env";
 import { Address } from "../models/address";
+import { hasCoords } from "../utils/functions";
 
 const API_KEY = env.GOOGLEAPI_KEY;
 
@@ -10,7 +11,6 @@ export async function computeBestRoute(addresses: Address[]) {
     throw new Error("Envie pelo menos um destino além da localização atual.");
   }
 
-  // Origem é sempre o primeiro item
   const origin = valid[0];
 
   const intermediates = valid.slice(1).map((a) => ({
@@ -57,7 +57,6 @@ export async function computeBestRoute(addresses: Address[]) {
 
   const ordered = [origin, ...optimizedIdx.map((i: number) => valid[i + 1])];
 
-  // Gera rota no Maps (sem volta para origem)
   const mapsLink =
     "https://www.google.com/maps/dir/" +
     ordered.map((a) => `${a.lat},${a.lon}`).join("/");
@@ -66,4 +65,30 @@ export async function computeBestRoute(addresses: Address[]) {
     ordered,
     mapsLink,
   };
+}
+
+export function generateMapsLinks(
+  route: Address[]
+): string[] {
+  const clean = route.filter(hasCoords);
+
+  const links: string[] = [];
+  let i = 0;
+
+  while (i < clean.length - 1) {
+    const chunk = clean.slice(i, i + 10);
+
+    if (i !== 0) {
+      chunk.unshift(clean[i - 1]);
+    }
+
+    const link =
+      "https://www.google.com/maps/dir/" +
+      chunk.map((p) => `${p.lat},${p.lon}`).join("/");
+
+    links.push(link);
+    i += 9;
+  }
+
+  return links;
 }

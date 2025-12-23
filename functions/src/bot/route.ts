@@ -11,7 +11,11 @@ import { differenceInDays } from "date-fns";
 import { mainMenu } from "./flows/mainMenu";
 import { welcome } from "./flows/welcome";
 import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
-import { handleMainMenu, handleRouteMenu } from "../handlers/menusHandler";
+import {
+  handleMainMenu,
+  handleRouteMenu,
+  handleStatsMenu,
+} from "../handlers/menusHandler";
 import { handleRouteMenuOptions } from "../handlers/routeMenuHandler";
 
 export async function route(
@@ -70,6 +74,7 @@ export async function route(
     main_menu: handleMainMenu,
     route_menu: handleRouteMenu,
     ...handleRouteMenuOptions(),
+    stats_menu: handleStatsMenu,
   };
 
   const daysDiff = differenceInDays(new Date(), session.updatedAt.toDate());
