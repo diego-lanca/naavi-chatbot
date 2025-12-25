@@ -265,7 +265,7 @@ export async function handleRouteReview(
 
     for (const chunk of apiChunks) {
       const optimized = await optimizeChunkWithGoogle(currentOrigin, chunk);
-      refined.push(...optimized.splice(1));
+      refined.push(...optimized);
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       currentOrigin = optimized.at(-1)!;
     }
