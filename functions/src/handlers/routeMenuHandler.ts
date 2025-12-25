@@ -11,6 +11,7 @@ import {
   chunkRoute,
   getAddressFromCoords,
   hasCoords,
+  removeNearDuplicatePoints,
   validateAddresses,
 } from "../utils/functions";
 
@@ -255,21 +256,23 @@ export async function handleRouteReview(
       lon: userLocation.lon,
     };
 
-    const orderedGlobal = buildOptimizedRoute(origin, validated);
+    const orderedWithOrigin = buildOptimizedRoute(origin, validated);
 
-    const apiChunks = chunkRoute(orderedGlobal, 25);
+    const apiChunks = chunkRoute(orderedWithOrigin, 25);
 
     let currentOrigin = origin;
     const refined: Address[] = [];
 
     for (const chunk of apiChunks) {
       const optimized = await optimizeChunkWithGoogle(currentOrigin, chunk);
-      refined.push(...optimized);
+      refined.push(...optimized.splice(1));
       // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       currentOrigin = optimized.at(-1)!;
     }
 
-    const links = generateMapsLinks(refined);
+    const cleanRoute = removeNearDuplicatePoints(refined.filter(hasCoords));
+
+    const links = generateMapsLinks(cleanRoute);
 
     let response =
       "🚀 *Rota otimizada gerada!*\n" +

@@ -17,7 +17,7 @@ export async function computeBestRoute(
   if (valid.length === 1) return [origin, valid[0]];
 
   const destinationFinal = valid[valid.length - 1];
-  const intermediateAddresses = valid.slice(0, -1); // 👈 TODOS menos o último
+  const intermediateAddresses = valid.slice(0, -1);
 
   const intermediates = intermediateAddresses.map((a) => ({
     location: {
@@ -91,21 +91,35 @@ export function generateMapsLinks(route: Address[]): string[] {
   const clean = route.filter(hasCoords);
 
   const links: string[] = [];
+
+  const MAX_WAYPOINTS = 9;
+
   let i = 0;
 
   while (i < clean.length - 1) {
-    const chunk = clean.slice(i, i + 10);
+    // destino real do trecho
+    const destination = clean[i + 1 + MAX_WAYPOINTS] ?? clean.at(-1)!;
 
-    if (i !== 0) {
-      chunk.unshift(clean[i - 1]);
+    // waypoints = pontos ENTRE onde o usuário está e o destino
+    const waypoints = clean.slice(i + 1, clean.indexOf(destination));
+
+    const params = new URLSearchParams({
+      api: "1",
+      destination: `${destination.lat},${destination.lon}`,
+      travelmode: "driving",
+    });
+
+    if (waypoints.length) {
+      params.append(
+        "waypoints",
+        waypoints.map((p) => `${p.lat},${p.lon}`).join("|")
+      );
     }
 
-    const link =
-      "https://www.google.com/maps/dir/" +
-      chunk.map((p) => `${p.lat},${p.lon}`).join("/");
+    links.push(`https://www.google.com/maps/dir/?${params.toString()}`);
 
-    links.push(link);
-    i += 9;
+    // próximo trecho começa no destino atual
+    i = clean.indexOf(destination);
   }
 
   return links;

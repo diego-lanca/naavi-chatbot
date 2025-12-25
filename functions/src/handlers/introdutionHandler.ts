@@ -9,11 +9,74 @@ import { parseAge } from "../utils/functions";
 export function handleIntrodutionOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
-  > {
+> {
   return {
-    welcome: handleAskName,
+    welcome: handleIntroAll,
     ask_age: handleAskAge,
     ask_sex: handleAskSex,
+  };
+}
+
+export async function handleIntroAll(
+  user: UserDoc,
+  msg: string
+): Promise<{ msg: string }> {
+  // normaliza separadores
+  const parts = msg
+    .replace(/-/g, ",")
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (parts.length < 3) {
+    return {
+      msg:
+        "😅 Preciso de *nome, idade e sexo* em uma única mensagem.\n\n" +
+        "Exemplos:\n" +
+        "• João, 25, M\n" +
+        "• Maria 32 F",
+    };
+  }
+
+  const [rawName, rawAge, rawSex] = parts;
+
+  // 🔹 Nome
+  if (rawName.length < 2 || rawName.length > 50 || /^\d+$/.test(rawName)) {
+    return { msg: "❌ O nome informado não parece válido." };
+  }
+
+  // 🔹 Idade
+  const age = parseAge(rawAge);
+  if (age === null || age < 12 || age > 100) {
+    return { msg: "❌ A idade informada não é válida." };
+  }
+
+  // 🔹 Sexo
+  const sexNormalized = rawSex.toUpperCase();
+  let sex: "M" | "F" | null = null;
+
+  if (["M", "MASCULINO"].includes(sexNormalized)) sex = "M";
+  if (["F", "FEMININO"].includes(sexNormalized)) sex = "F";
+
+  if (!sex) {
+    return { msg: "❌ Informe o sexo como M/F ou Masculino/Feminino." };
+  }
+
+  // 💾 Salva tudo de uma vez
+  await setUser(user.id, {
+    name: rawName,
+    age,
+    sex,
+  });
+
+  await setSession(user.id, { step: "main_menu" });
+
+  return {
+    msg:
+      `🎉 Perfeito, ${rawName}!\n` +
+      `📅 Idade: *${age}*\n` +
+      `🚻 Sexo: *${sex === "M" ? "Masculino" : "Feminino"}*\n\n` +
+      mainMenu(),
   };
 }
 

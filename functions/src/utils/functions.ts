@@ -159,3 +159,18 @@ export function chunkRoute<T>(points: T[], size: number): T[][] {
   }
   return chunks;
 }
+
+function almostEqual(a: number, b: number, epsilon = 1e-5) {
+  return Math.abs(a - b) < epsilon;
+}
+
+export function removeNearDuplicatePoints(route: Address[]): Address[] {
+  return route.filter((p, i, arr) => {
+    if (i === 0) return true;
+
+    const prev = arr[i - 1];
+
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    return !(almostEqual(p.lat!, prev.lat!) && almostEqual(p.lon!, prev.lon!));
+  });
+}
