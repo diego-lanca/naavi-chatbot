@@ -115,6 +115,24 @@ export function haversineDistance(a: Address, b: Address): number {
   return 2 * R * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
 }
 
+export function calculateDistanceKm(route: Address[]): number {
+  let total = 0;
+
+  for (let i = 1; i < route.length; i++) {
+    total += haversineDistance(
+      route[i - 1],
+      route[i],
+    );
+  }
+
+  return total;
+}
+
+export function isSamePoint(a: Address, b: Address): boolean {
+  return a.lat === b.lat && a.lon === b.lon;
+}
+
+
 export function buildOptimizedRoute(
   origin: Address,
   destinations: Address[]

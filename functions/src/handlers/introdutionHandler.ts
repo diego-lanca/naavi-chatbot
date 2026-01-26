@@ -1,6 +1,7 @@
 import { askAge } from "../bot/flows/introdution/askAge";
 import { askSex } from "../bot/flows/introdution/askSex";
 import { mainMenu } from "../bot/flows/mainMenu";
+import { env } from "../config/env";
 import { UserDoc } from "../models/user";
 import { setSession } from "../sevices/databaseService";
 import { setUser } from "../sevices/userService";
@@ -9,7 +10,7 @@ import { parseAge } from "../utils/functions";
 export function handleIntrodutionOptions(): Record<
   string,
   (user: UserDoc, msg: string) => Promise<{ msg: string; mediaUrl?: string }>
-> {
+  > {
   return {
     welcome: handleIntroAll,
     ask_age: handleAskAge,
@@ -19,7 +20,7 @@ export function handleIntrodutionOptions(): Record<
 
 export async function handleIntroAll(
   user: UserDoc,
-  msg: string
+  msg: string,
 ): Promise<{ msg: string }> {
   // normaliza separadores
   const parts = msg
@@ -82,7 +83,7 @@ export async function handleIntroAll(
 
 export async function handleAskName(
   user: UserDoc,
-  msg: string
+  msg: string,
 ): Promise<{ msg: string; mediaUrl?: string }> {
   const userName = msg.trim();
 
@@ -104,7 +105,7 @@ export async function handleAskName(
 
 export async function handleAskAge(
   user: UserDoc,
-  msg: string
+  msg: string,
 ): Promise<{ msg: string; mediaUrl?: string }> {
   const age = parseAge(msg);
   if (age === null || age < 12 || age > 100) {
@@ -122,7 +123,7 @@ export async function handleAskAge(
 
 export async function handleAskSex(
   user: UserDoc,
-  msg: string
+  msg: string,
 ): Promise<{ msg: string; mediaUrl?: string }> {
   const sex = msg.trim().toUpperCase();
   if (!["M", "F"].includes(sex)) {
@@ -134,5 +135,6 @@ export async function handleAskSex(
   await setSession(user.id, { step: "main_menu" });
   return {
     msg: mainMenu(),
+    mediaUrl: env.BOT_LOGO_URL,
   };
 }

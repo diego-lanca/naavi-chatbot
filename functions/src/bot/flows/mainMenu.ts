@@ -1,10 +1,12 @@
 export function mainMenu(): string {
   return (
-    "🗺️ Menu Principal\n" +
-    "────────────────────────\n" +
-    "Escolha uma das opções abaixo 👇\n\n" +
-    "1️⃣ 🚚 Nova Entrega / Criar Rota\n" +
-    "2️⃣ 📊 Estatísticas de Rotas\n\n"
-    // "3️⃣ 👤 Perfil\n\n"
+    "🗺️ *Menu Principal*\n" +
+    "━━━━━━━━━━━━━━━━━━\n" +
+    "O que você deseja fazer?\n\n" +
+    "1️⃣ 🚚 *Criar nova rota*\n" +
+    "   Otimize entregas e economize tempo\n\n" +
+    "2️⃣ 📊 *Minhas estatísticas*\n" +
+    "   Distância, economia e histórico\n\n" +
+    "Digite o número da opção desejada 👇"
   );
 }

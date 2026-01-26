@@ -35,6 +35,18 @@ export async function setSession(
   );
 }
 
+export async function clearSessionData(
+  userId: string,
+): Promise<void> {
+  await sessionsRef.doc(userId).set(
+    {
+      data: {},
+      updatedAt: Timestamp.now(),
+    },
+    { merge: true }
+  );
+}
+
 export async function getSubscription(
   userId: string
 ): Promise<Subscription | null> {

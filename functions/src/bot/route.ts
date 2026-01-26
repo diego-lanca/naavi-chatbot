@@ -14,9 +14,9 @@ import { handleIntrodutionOptions } from "../handlers/introdutionHandler";
 import {
   handleMainMenu,
   handleRouteMenu,
-  handleStatsMenu,
 } from "../handlers/menusHandler";
 import { handleRouteMenuOptions } from "../handlers/routeMenuHandler";
+import { env } from "../config/env";
 
 export async function route(
   user: UserDoc,
@@ -56,7 +56,7 @@ export async function route(
 
   if (isMainMenuGreeting(msg)) {
     await setSession(user.id, { step: "main_menu" });
-    return { msg: mainMenu() };
+    return { msg: mainMenu(), mediaUrl: env.BOT_LOGO_URL };
   }
 
   const stepHandlers: Record<
@@ -74,13 +74,12 @@ export async function route(
     main_menu: handleMainMenu,
     route_menu: handleRouteMenu,
     ...handleRouteMenuOptions(),
-    stats_menu: handleStatsMenu,
   };
 
   const daysDiff = differenceInDays(new Date(), session.updatedAt.toDate());
 
   if (daysDiff > 0) {
-    return { msg: mainMenu() };
+    return { msg: mainMenu(), mediaUrl: env.BOT_LOGO_URL };
   }
 
   const handler = stepHandlers[session.step];
@@ -98,7 +97,7 @@ export async function route(
 
   if (msg.trim() === "0") {
     await setSession(user.id, { step: "main_menu" });
-    return { msg: mainMenu() };
+    return { msg: mainMenu(), mediaUrl: env.BOT_LOGO_URL };
   }
 
   return {

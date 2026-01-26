@@ -4,9 +4,8 @@ export function routeMenu(): string {
     "────────────────────────\n" +
     "Escolha como deseja gerar sua rota de entrega 👇\n\n" +
     "1️⃣ ✍️ Inserir endereços manualmente\n" +
-    // "2️⃣ 📦 Enviar arquivo (Shopee, Mercado Livre, etc.)\n" +
+    "2️⃣ 📸 Enviar vários textos, áudios ou imagens\n\n" +
     "0️⃣ ⬅️ Voltar ao menu principal\n\n" +
-    "💡 Dica: você pode colar vários endereços " +
-    "de uma vez para otimização automática!"
+    "💡 Dica: a opção 2 é ideal se você tem muitos endereços."
   );
 }

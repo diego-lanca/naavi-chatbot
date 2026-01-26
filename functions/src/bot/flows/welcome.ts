@@ -7,7 +7,8 @@ export async function welcome(user: UserDoc): Promise<string> {
   });
 
   return (
-    "Oi! 👋 Sou o *Naavi*, seu assistente de navegação e logística. 🗺️🚚\n\n" +
+    "Oi! 👋 Sou o *Rastro+ / Rotas*, seu " +
+    "assistente de navegação e logística. 🗺️🚚\n\n" +
     "Ajudo você a criar rotas mais rápidas " +
     "e eficientes para suas entregas.\n\n" +
     "Para começar, me diga *em uma única mensagem*:\n" +
