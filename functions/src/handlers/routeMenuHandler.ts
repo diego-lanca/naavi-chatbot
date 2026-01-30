@@ -336,7 +336,6 @@ export async function handleManualRouteInsert(
         "Não consegui identificar nenhum endereço 😕\n\n" +
         "👉 Você pode:\n" +
         "• Enviar o texto novamente\n" +
-        "• Mandar um áudio\n" +
         "• Enviar uma foto com os endereços\n\n" +
         "Digite *0* para cancelar.",
     };
@@ -530,7 +529,7 @@ export async function handleRouteReview(
     return {
       msg:
         "➕ *Adicionar mais endereços*\n\n" +
-        "Envie os novos endereços (texto, áudio ou imagem).\n" +
+        "Envie os novos endereços (texto ou imagem).\n" +
         "Eles serão adicionados à lista atual.\n\n" +
         "❌ Envie *0* para cancelar.",
     };

@@ -4,7 +4,7 @@ export function routeMenu(): string {
     "────────────────────────\n" +
     "Escolha como deseja gerar sua rota de entrega 👇\n\n" +
     "1️⃣ ✍️ Inserir endereços manualmente\n" +
-    "2️⃣ 📸 Enviar vários textos, áudios ou imagens\n\n" +
+    "2️⃣ 📸 Enviar vários textos ou imagens\n\n" +
     "0️⃣ ⬅️ Voltar ao menu principal\n\n" +
     "💡 Dica: a opção 2 é ideal se você tem muitos endereços."
   );

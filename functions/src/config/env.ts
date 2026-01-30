@@ -6,4 +6,5 @@ export const env = {
   GOOGLEAPI_KEY: process.env.GOOGLEAPI_KEY ?? "",
   OPENAI_API_KEY: process.env.OPENAI_KEY ?? "",
   BOT_LOGO_URL: process.env.LOGO_URL ?? "",
+  KIWIFY_SECRET: process.env.KIWIFY_SECRET ?? "",
 };

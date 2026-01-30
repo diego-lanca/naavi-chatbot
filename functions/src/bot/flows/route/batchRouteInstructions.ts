@@ -4,7 +4,6 @@ export function batchRouteInstructions(): string {
     "━━━━━━━━━━━━━━━━━━\n\n" +
     "Agora você pode enviar:\n" +
     "📸 Várias imagens\n" +
-    "🎤 Vários áudios\n" +
     "✍️ Textos\n\n" +
     "👉 Envie tudo sem esperar resposta.\n" +
     "👉 Quando terminar, digite *OK*.\n\n" +
